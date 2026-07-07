@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Prompt Quality Checker</title>
+<style>
+  :root {
+    --bg-0: #0d1117;
+    --bg-1: #161b22;
+    --surface: #21262d;
+    --border: #30363d;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --blue: #58a6ff;
+    --purple: #bc8cff;
+    --text: #e6edf3;
+    --muted: #8b949e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg-0);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    padding: 40px 16px 60px;
+  }
+
+  .wrap { max-width: 740px; margin: 0 auto; }
+
+  /* Header */
+  .badge {
+    display: inline-block;
+    background: rgba(88,166,255,0.15);
+    border: 1px solid rgba(88,166,255,0.3);
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    font-size: clamp(24px, 4vw, 34px);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  /* Input card */
+  .card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .card label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 130px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: inherit;
+    padding: 14px;
+    resize: vertical;
+    line-height: 1.6;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { outline: none; border-color: var(--blue); }
+  textarea::placeholder { color: var(--muted); }
+
+  .btn {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    padding: 14px;
+    background: var(--blue);
+    color: #0d1117;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+
+  /* Results */
+  #results { display: none; }
+
+  /* Overall score banner */
+  .overall-banner {
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .overall-banner .score-num {
+    font-size: 64px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .overall-banner .score-label {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-bottom: 10px;
+  }
+  .overall-banner .verdict {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* Score pills */
+  .criteria-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 520px) {
+    .criteria-grid { grid-template-columns: 1fr; }
+  }
+
+  .criterion {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 16px;
+  }
+  .criterion .crit-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .criterion .crit-score {
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .criterion .crit-bar-track {
+    height: 6px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .criterion .crit-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.6s ease;
+  }
+  .criterion .crit-feedback {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* Tip panel */
+  .tip-panel {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 20px;
+  }
+  .tip-panel h3 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .tip-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tip-list li {
+    font-size: 14px;
+    line-height: 1.5;
+    padding-left: 20px;
+    position: relative;
+  }
+  .tip-list li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--blue);
+    font-weight: 700;
+  }
+
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .reset-btn:hover { border-color: var(--text); color: var(--text); }
+
+  /* Color helpers */
+  .c-red    { color: var(--red); }
+  .c-yellow { color: var(--yellow); }
+  .c-green  { color: var(--green); }
+  .c-purple { color: var(--purple); }
+
+  .bg-red    { background: rgba(248,81,73,0.12); border-color: rgba(248,81,73,0.3); }
+  .bg-yellow { background: rgba(210,153,34,0.12); border-color: rgba(210,153,34,0.3); }
+  .bg-green  { background: rgba(63,185,80,0.12);  border-color: rgba(63,185,80,0.3); }
+
+  .bar-red    { background: var(--red); }
+  .bar-yellow { background: var(--yellow); }
+  .bar-green  { background: var(--green); }
+
+  /* Ingredient legend */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="badge">Tool 02</div>
+  <h1>Prompt Quality Checker</h1>
+  <p class="subtitle">Paste any prompt and get scored on the 3-ingredient quality scale: <strong>Context</strong>, <strong>Task</strong>, and <strong>Format</strong>. Learn what's weak and how to fix it.</p>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span> Context — background & constraints</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--purple)"></span> Task — what you're asking for</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span> Format — how you want the output</div>
+  </div>
+
+  <div class="card">
+    <label for="promptInput">Your Prompt</label>
+    <textarea id="promptInput" placeholder="e.g. You are a senior developer. Review this Python function for edge cases and return a numbered list of issues, ranked by severity..."></textarea>
+    <button class="btn" id="scoreBtn">Score My Prompt</button>
+  </div>
+
+  <div id="results">
+
+    <div class="overall-banner card" id="overallBanner">
+      <div class="score-num" id="overallNum">—</div>
+      <div class="score-label">Overall Score</div>
+      <div class="verdict" id="overallVerdict"></div>
+    </div>
+
+    <div class="criteria-grid">
+      <div class="criterion" id="ctxCard">
+        <div class="crit-label">Context</div>
+        <div class="crit-score" id="ctxScore">—</div>
+        <div class="crit-bar-track"><div class="crit-bar-fill" id="ctxBar" style="width:0%"></div></div>
+        <div class="crit-feedback" id="ctxFeedback"></div>
+      </div>
+      <div class="criterion" id="taskCard">
+        <div class="crit-label">Task Clarity</div>
+        <div class="crit-score" id="taskScore">—</div>
+        <div class="crit-bar-track"><div class="crit-bar-fill" id="taskBar" style="width:0%"></div></div>
+        <div class="crit-feedback" id="taskFeedback"></div>
+      </div>
+      <div class="criterion" id="fmtCard">
+        <div class="crit-label">Format Specificity</div>
+        <div class="crit-score" id="fmtScore">—</div>
+        <div class="crit-bar-track"><div class="crit-bar-fill" id="fmtBar" style="width:0%"></div></div>
+        <div class="crit-feedback" id="fmtFeedback"></div>
+      </div>
+    </div>
+
+    <div class="tip-panel">
+      <h3>How to improve</h3>
+      <ul class="tip-list" id="tipList"></ul>
+    </div>
+
+    <button class="reset-btn" id="resetBtn">Score another prompt</button>
+
+  </div>
+
+</div>
+
+<script>
+  // ---------------------------------------------------------------------------
+  // Scoring engine
+  // Each criterion is scored 1–10 based on weighted keyword/pattern signals.
+  // ---------------------------------------------------------------------------
+
+  // Signals for CONTEXT (who, what situation, role, constraints, audience)
+  const CTX_SIGNALS = [
+    { pattern: /\byou are\b/i,               weight: 2.0, label: "role assignment" },
+    { pattern: /\bact as\b/i,                weight: 1.5, label: "role assignment" },
+    { pattern: /\bexpert\b|\bsenior\b|\bprofessional\b/i, weight: 1.0, label: "expertise level" },
+    { pattern: /\bcontext\b|\bbackground\b/i, weight: 1.5, label: "explicit context" },
+    { pattern: /\bI (am|have|need|work)\b/i,  weight: 1.0, label: "user situation" },
+    { pattern: /\baudience\b|\bfor\b.{1,30}\bwho\b/i, weight: 1.0, label: "audience mention" },
+    { pattern: /\bgoal\b|\bobjective\b|\bpurpose\b/i, weight: 1.0, label: "goal stated" },
+    { pattern: /\bconstraint\b|\blimit\b|\brequirement\b/i, weight: 1.0, label: "constraints" },
+  ];
+
+  // Signals for TASK (verb, clear ask, specificity)
+  const TASK_SIGNALS = [
+    { pattern: /\b(write|create|build|make|generate)\b/i, weight: 1.5, label: "creation verb" },
+    { pattern: /\b(explain|describe|summarize|analyze|compare)\b/i, weight: 1.5, label: "analysis verb" },
+    { pattern: /\b(fix|debug|refactor|optimize|improve|review)\b/i, weight: 1.5, label: "improvement verb" },
+    { pattern: /\b(list|enumerate|outline|draft|plan)\b/i, weight: 1.0, label: "structured verb" },
+    { pattern: /\bspecifically\b|\bexactly\b|\bprecisely\b/i, weight: 1.0, label: "specificity adverb" },
+    { pattern: /\bthat\b.{3,50}\bshould\b/i, weight: 1.0, label: "criteria defined" },
+    { pattern: /\bdo not\b|\bdon't\b|\bavoid\b|\bexclude\b/i, weight: 0.8, label: "exclusion clause" },
+    { pattern: /\bfocus on\b|\bonly\b|\bstrictly\b/i, weight: 0.8, label: "scope narrowing" },
+  ];
+
+  // Signals for FORMAT (output shape, length, structure)
+  const FMT_SIGNALS = [
+    { pattern: /\b(numbered|bullet|list)\b/i,     weight: 2.0, label: "list format" },
+    { pattern: /\btable\b|\bmarkdown\b|\bjson\b|\bxml\b|\bcsv\b/i, weight: 2.0, label: "structured format" },
+    { pattern: /\b(short|brief|concise|one.?line|one.?paragraph)\b/i, weight: 1.5, label: "length constraint" },
+    { pattern: /\b(long|detailed|comprehensive|in.?depth|thorough)\b/i, weight: 1.0, label: "depth request" },
+    { pattern: /\bcode block\b|\b```\b|\bsyntax highlighted\b/i, weight: 1.5, label: "code format" },
+    { pattern: /\bsection\b|\bheading\b|\bheader\b/i, weight: 1.0, label: "section structure" },
+    { pattern: /\bexample\b|\bsample\b/i,          weight: 0.8, label: "examples requested" },
+    { pattern: /\bno explanation\b|\bno preamble\b|\bjust\b.{1,20}\boutput\b/i, weight: 1.5, label: "output-only request" },
+  ];
+
+  function scoreSignals(text, signals, maxScore) {
+    let total = 0;
+    const matched = [];
+    for (const s of signals) {
+      if (s.pattern.test(text)) {
+        total += s.weight;
+        matched.push(s.label);
+      }
+    }
+    // Map 0..maxWeight to 1..10
+    const maxWeight = signals.reduce((a, s) => a + s.weight, 0);
+    const normalized = Math.min(total / maxWeight, 1);
+    const score = Math.round(1 + normalized * 9);
+    return { score, matched };
+  }
+
+  function lengthBonus(text) {
+    // Reward prompts that are more specific (longer up to ~200 chars)
+    const len = text.trim().length;
+    if (len < 30) return -1;
+    if (len < 60) return 0;
+    if (len < 120) return 1;
+    if (len < 200) return 1.5;
+    return 2;
+  }
+
+  function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+  function scorePrompt(text) {
+    const bonus = lengthBonus(text);
+
+    const ctx  = scoreSignals(text, CTX_SIGNALS,  10);
+    const task = scoreSignals(text, TASK_SIGNALS, 10);
+    const fmt  = scoreSignals(text, FMT_SIGNALS,  10);
+
+    // Apply bonus to weakest score
+    const scores = [
+      { key: 'ctx',  raw: ctx.score  + bonus },
+      { key: 'task', raw: task.score + bonus },
+      { key: 'fmt',  raw: fmt.score  + bonus },
+    ];
+    scores.forEach(s => s.final = clamp(Math.round(s.raw), 1, 10));
+
+    const overall = clamp(Math.round((scores[0].final + scores[1].final + scores[2].final) / 3), 1, 10);
+
+    return {
+      ctx:  { score: scores[0].final, matched: ctx.matched  },
+      task: { score: scores[1].final, matched: task.matched },
+      fmt:  { score: scores[2].final, matched: fmt.matched  },
+      overall,
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Feedback copy
+  // ---------------------------------------------------------------------------
+
+  function ctxFeedbackText(score, matched) {
+    if (score >= 8) return "Great context! You've set the scene clearly — Claude knows who it is and what the situation is.";
+    if (score >= 5) {
+      const missing = [];
+      if (!matched.includes("role assignment")) missing.push("assign a role (e.g. 'You are a...')");
+      if (!matched.includes("goal stated"))     missing.push("state your goal explicitly");
+      return "Decent context. Try to " + (missing.length ? missing.slice(0,2).join(" and ") + "." : "add more background about your situation.");
+    }
+    return "Context is weak. Add who Claude should act as, what problem you're solving, and any relevant constraints.";
+  }
+
+  function taskFeedbackText(score, matched) {
+    if (score >= 8) return "Task is crystal-clear. Strong action verb and well-scoped request.";
+    if (score >= 5) return "Task is readable but could be sharper. Add exclusions (what NOT to do) or specify exact criteria for success.";
+    return "Task is vague. Use a strong action verb (write, analyze, fix...) and describe exactly what success looks like.";
+  }
+
+  function fmtFeedbackText(score, matched) {
+    if (score >= 8) return "Format is well-specified. Claude will know exactly how to structure its response.";
+    if (score >= 5) return "Some format hints present. Consider adding length guidance (\"in 3 bullet points\", \"under 200 words\") for tighter control.";
+    return "No format specified. Tell Claude how to structure its answer — list, table, code block, paragraph length, etc.";
+  }
+
+  function overallVerdict(score) {
+    if (score >= 9) return "Excellent — this is a power-user prompt.";
+    if (score >= 7) return "Strong prompt — minor tweaks will make it airtight.";
+    if (score >= 5) return "Decent start — add more structure to get better outputs.";
+    if (score >= 3) return "Needs work — vague prompts produce vague results.";
+    return "Very weak — Claude will have to guess. Build up each ingredient.";
+  }
+
+  function buildTips(result) {
+    const tips = [];
+    if (result.ctx.score < 6)  tips.push("Add a <strong>role</strong>: start with \"You are a [expert role]...\"");
+    if (result.task.score < 6) tips.push("Use a <strong>strong action verb</strong>: write, analyze, compare, debug, summarize...");
+    if (result.fmt.score < 6)  tips.push("Specify the <strong>output format</strong>: numbered list, table, JSON, bullet points...");
+    if (result.ctx.score < 8 && !result.ctx.matched.includes("goal stated"))
+      tips.push("State your <strong>goal</strong>: \"My goal is to...\" or \"I want this for...\"");
+    if (result.task.score < 8)
+      tips.push("Add <strong>exclusions</strong>: \"Do not include...\" or \"Avoid...\" narrows scope dramatically.");
+    if (result.fmt.score < 8)
+      tips.push("Add a <strong>length constraint</strong>: \"in under 150 words\", \"3 bullet points max\", etc.");
+    if (tips.length === 0) tips.push("Your prompt already covers all three ingredients well. Keep iterating and testing!");
+    return tips;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Color helpers
+  // ---------------------------------------------------------------------------
+
+  function colorClass(score) {
+    if (score >= 7) return { text: 'c-green', bar: 'bar-green', bg: 'bg-green' };
+    if (score >= 4) return { text: 'c-yellow', bar: 'bar-yellow', bg: 'bg-yellow' };
+    return { text: 'c-red', bar: 'bar-red', bg: 'bg-red' };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
+
+  function render(result) {
+    const overall = colorClass(result.overall);
+
+    // Overall banner
+    const banner = document.getElementById('overallBanner');
+    banner.className = 'overall-banner card ' + overall.bg;
+    document.getElementById('overallNum').className = 'score-num ' + overall.text;
+    document.getElementById('overallNum').textContent = result.overall + '/10';
+    document.getElementById('overallVerdict').textContent = overallVerdict(result.overall);
+
+    // Per-criterion cards
+    const items = [
+      { key: 'ctx',  score: result.ctx.score,  matched: result.ctx.matched,  feedbackFn: ctxFeedbackText  },
+      { key: 'task', score: result.task.score, matched: result.task.matched, feedbackFn: taskFeedbackText },
+      { key: 'fmt',  score: result.fmt.score,  matched: result.fmt.matched,  feedbackFn: fmtFeedbackText  },
+    ];
+
+    for (const item of items) {
+      const c = colorClass(item.score);
+      document.getElementById(item.key + 'Score').className = 'crit-score ' + c.text;
+      document.getElementById(item.key + 'Score').textContent = item.score + '/10';
+      const fill = document.getElementById(item.key + 'Bar');
+      fill.className = 'crit-bar-fill ' + c.bar;
+      fill.style.width = (item.score / 10 * 100) + '%';
+      document.getElementById(item.key + 'Feedback').textContent = item.feedbackFn(item.score, item.matched);
+    }
+
+    // Tips
+    const tips = buildTips(result);
+    const tipList = document.getElementById('tipList');
+    tipList.innerHTML = tips.map(t => `<li>${t}</li>`).join('');
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Events
+  // ---------------------------------------------------------------------------
+
+  document.getElementById('scoreBtn').addEventListener('click', () => {
+    const text = document.getElementById('promptInput').value.trim();
+    if (!text) {
+      document.getElementById('promptInput').focus();
+      return;
+    }
+    const result = scorePrompt(text);
+    render(result);
+  });
+
+  document.getElementById('promptInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      document.getElementById('scoreBtn').click();
+    }
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    document.getElementById('promptInput').value = '';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('promptInput').focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+</script>
+</body>
+</html>

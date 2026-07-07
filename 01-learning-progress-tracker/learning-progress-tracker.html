@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Claude Mentorship — Progress Tracker</title>
+<style>
+  :root{
+    --bg-0:#100c1e;
+    --bg-1:#1a1430;
+    --surface:#211a3c;
+    --violet:#8b6bff;
+    --cyan:#3fe8e0;
+    --gold:#ffcf5c;
+    --text:#f1eefb;
+    --muted:#a79fc9;
+    --danger:#ff6b8b;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(139,107,255,0.25), transparent 45%),
+      radial-gradient(circle at 85% 0%, rgba(63,232,224,0.18), transparent 40%),
+      linear-gradient(180deg, var(--bg-0), var(--bg-1));
+    font-family:'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+    color:var(--text);
+    padding:32px 16px 60px;
+  }
+
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+  }
+
+  /* ---------- Header ---------- */
+  .eyebrow{
+    font-family:'Courier New', monospace;
+    font-size:12px;
+    letter-spacing:3px;
+    color:var(--cyan);
+    text-transform:uppercase;
+    margin:0 0 6px;
+  }
+  h1{
+    font-size:clamp(26px,4vw,36px);
+    margin:0 0 6px;
+    line-height:1.15;
+    background:linear-gradient(90deg,#fff,var(--cyan) 70%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .sub{
+    color:var(--muted);
+    margin:0 0 28px;
+    font-size:14.5px;
+  }
+
+  /* ---------- Hero stat ---------- */
+  .hero{
+    background:linear-gradient(160deg, var(--surface), #241d47);
+    border:1px solid rgba(139,107,255,0.25);
+    border-radius:20px;
+    padding:28px 26px 24px;
+    margin-bottom:22px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute; top:-40%; right:-20%;
+    width:280px; height:280px;
+    background:radial-gradient(circle, rgba(63,232,224,0.18), transparent 70%);
+    pointer-events:none;
+  }
+  .hero-top{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .pct{
+    font-family:'Courier New', monospace;
+    font-weight:700;
+    font-size:56px;
+    line-height:1;
+    color:var(--gold);
+    text-shadow:0 0 24px rgba(255,207,92,0.35);
+  }
+  .pct-label{color:var(--muted); font-size:14px;}
+
+  .bar-track{
+    width:100%;
+    height:16px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.06);
+    overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,0.05);
+    margin-bottom:16px;
+  }
+  .bar-fill{
+    height:100%;
+    width:0%;
+    border-radius:999px;
+    background:linear-gradient(90deg, var(--violet), var(--cyan));
+    box-shadow:0 0 16px rgba(139,107,255,0.55);
+    transition:width .5s ease;
+  }
+
+  .stat-row{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .stat{
+    flex:1 1 130px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:12px;
+    padding:10px 14px;
+  }
+  .stat b{
+    display:block;
+    font-family:'Courier New', monospace;
+    font-size:22px;
+  }
+  .stat span{color:var(--muted); font-size:12px;}
+  .stat.done b{color:var(--cyan);}
+  .stat.left b{color:var(--violet);}
+  .stat.total b{color:var(--text);}
+
+  /* ---------- Log form ---------- */
+  .panel{
+    background:var(--surface);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:18px;
+    padding:22px 22px 20px;
+    margin-bottom:22px;
+  }
+  .panel h2{
+    margin:0 0 14px;
+    font-size:15px;
+    letter-spacing:1px;
+    color:var(--muted);
+    text-transform:uppercase;
+    font-weight:600;
+  }
+  .form-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:flex-end;
+  }
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field label{font-size:12px; color:var(--muted);}
+  .field input{
+    width:96px;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.12);
+    background:rgba(255,255,255,0.04);
+    color:var(--text);
+    font-size:15px;
+    font-family:'Courier New', monospace;
+  }
+  .field input:focus{outline:2px solid var(--cyan); outline-offset:1px;}
+
+  button.log-btn{
+    padding:11px 22px;
+    border:none;
+    border-radius:10px;
+    background:linear-gradient(90deg,var(--violet),var(--cyan));
+    color:#12102a;
+    font-weight:700;
+    font-size:14.5px;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  button.log-btn:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(139,107,255,0.4);}
+  button.log-btn:active{transform:translateY(0);}
+
+  button.reset-btn{
+    padding:11px 16px;
+    border:1px solid rgba(255,107,139,0.4);
+    border-radius:10px;
+    background:transparent;
+    color:var(--danger);
+    font-size:13px;
+    cursor:pointer;
+  }
+  button.reset-btn:hover{background:rgba(255,107,139,0.08);}
+
+  .msg{
+    margin-top:12px;
+    font-size:13px;
+    min-height:18px;
+    color:var(--muted);
+  }
+  .msg.error{color:var(--danger);}
+  .msg.ok{color:var(--cyan);}
+
+  /* ---------- Grid ---------- */
+  .grid-panel{
+    background:var(--surface);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:18px;
+    padding:22px;
+  }
+  .week-row{
+    display:grid;
+    grid-template-columns:74px 1fr;
+    align-items:center;
+    gap:10px;
+    padding:6px 0;
+  }
+  .week-label{
+    font-family:'Courier New', monospace;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .classes{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:8px;
+  }
+  .cell{
+    aspect-ratio:1;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.1);
+    background:rgba(255,255,255,0.03);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Courier New', monospace;
+    font-size:11px;
+    color:var(--muted);
+    cursor:pointer;
+    transition:all .2s ease;
+    user-select:none;
+  }
+  .cell:hover{border-color:var(--cyan);}
+  .cell.done{
+    background:linear-gradient(140deg,var(--violet),var(--cyan));
+    color:#12102a;
+    border-color:transparent;
+    font-weight:700;
+    box-shadow:0 0 10px rgba(63,232,224,0.35);
+  }
+
+  /* ---------- Milestone banner ---------- */
+  .milestone{
+    display:none;
+    margin-bottom:22px;
+    padding:18px 20px;
+    border-radius:16px;
+    background:linear-gradient(120deg, rgba(255,207,92,0.16), rgba(139,107,255,0.16));
+    border:1px solid rgba(255,207,92,0.4);
+    font-size:14.5px;
+    line-height:1.5;
+    animation:pop .4s ease;
+  }
+  .milestone.show{display:block;}
+  .milestone b{color:var(--gold);}
+  @keyframes pop{
+    from{transform:scale(0.96); opacity:0;}
+    to{transform:scale(1); opacity:1;}
+  }
+
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:11.5px;
+    margin-top:26px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important; animation:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Claude Mentorship · 8-Week Program</p>
+  <h1>Learning Progress Tracker</h1>
+  <p class="sub">40 classes · 8 weeks × 5 classes each. Log what you finish, watch the grid fill in.</p>
+
+  <div class="milestone" id="milestone"></div>
+
+  <div class="hero">
+    <div class="hero-top">
+      <div class="pct" id="pctNum">0%</div>
+      <div class="pct-label">of the program complete</div>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+    <div class="stat-row">
+      <div class="stat done"><b id="statDone">0</b><span>classes done</span></div>
+      <div class="stat left"><b id="statLeft">40</b><span>classes remaining</span></div>
+      <div class="stat total"><b>40</b><span>total classes</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Log Completion</h2>
+    <div class="form-row">
+      <div class="field">
+        <label for="weekInput">Week (1–8)</label>
+        <input type="number" id="weekInput" min="1" max="8" placeholder="1">
+      </div>
+      <div class="field">
+        <label for="classInput">Class (1–5)</label>
+        <input type="number" id="classInput" min="1" max="5" placeholder="1">
+      </div>
+      <button class="log-btn" id="logBtn">Log Completion</button>
+      <button class="reset-btn" id="resetBtn">Reset all</button>
+    </div>
+    <p class="msg" id="formMsg">Tip: you can also click any cell in the grid below to toggle it directly.</p>
+  </div>
+
+  <div class="grid-panel">
+    <div id="gridHost"></div>
+  </div>
+
+  <footer>State lives in this browser tab only — it resets if you reload the page. Export/save the file after each session if you want to keep a record.</footer>
+</div>
+
+<script>
+  const WEEKS = 8, CLASSES_PER_WEEK = 5, TOTAL = WEEKS * CLASSES_PER_WEEK;
+  const state = {}; // key "w-c" -> true if done
+  let hit50 = false, hit100 = false;
+
+  const gridHost = document.getElementById('gridHost');
+  const pctNum = document.getElementById('pctNum');
+  const barFill = document.getElementById('barFill');
+  const statDone = document.getElementById('statDone');
+  const statLeft = document.getElementById('statLeft');
+  const formMsg = document.getElementById('formMsg');
+  const milestone = document.getElementById('milestone');
+
+  function key(w,c){ return w + '-' + c; }
+
+  function buildGrid(){
+    gridHost.innerHTML = '';
+    for(let w=1; w<=WEEKS; w++){
+      const row = document.createElement('div');
+      row.className = 'week-row';
+
+      const label = document.createElement('div');
+      label.className = 'week-label';
+      label.textContent = 'WEEK ' + w;
+      row.appendChild(label);
+
+      const classesDiv = document.createElement('div');
+      classesDiv.className = 'classes';
+      for(let c=1; c<=CLASSES_PER_WEEK; c++){
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.textContent = c;
+        cell.dataset.w = w;
+        cell.dataset.c = c;
+        cell.addEventListener('click', () => {
+          toggle(w,c);
+        });
+        classesDiv.appendChild(cell);
+      }
+      row.appendChild(classesDiv);
+      gridHost.appendChild(row);
+    }
+  }
+
+  function toggle(w,c){
+    const k = key(w,c);
+    state[k] = !state[k];
+    render();
+  }
+
+  function markDone(w,c){
+    state[key(w,c)] = true;
+    render();
+  }
+
+  function countDone(){
+    return Object.values(state).filter(Boolean).length;
+  }
+
+  function render(){
+    // update cells
+    document.querySelectorAll('.cell').forEach(cell => {
+      const w = cell.dataset.w, c = cell.dataset.c;
+      cell.classList.toggle('done', !!state[key(w,c)]);
+    });
+
+    const done = countDone();
+    const pct = Math.round((done/TOTAL)*100);
+    pctNum.textContent = pct + '%';
+    barFill.style.width = pct + '%';
+    statDone.textContent = done;
+    statLeft.textContent = TOTAL - done;
+
+    checkMilestones(pct);
+  }
+
+  function showMilestone(html){
+    milestone.innerHTML = html;
+    milestone.classList.add('show');
+  }
+
+  function checkMilestones(pct){
+    if(pct >= 50 && !hit50 && pct < 100){
+      hit50 = true;
+      showMilestone("<b>Halfway there!</b> 20 classes down — the fundamentals and the hard early wins are behind you. The back half is where it turns into a portfolio. Keep the pace.");
+    }
+    if(pct >= 100 && !hit100){
+      hit100 = true;
+      showMilestone("<b>All 40 classes complete.</b> Eight weeks, fully logged. That's a real AI-engineering foundation you built one session at a time — time to point it at the next program or the next client project.");
+    }
+    if(pct < 50){
+      hit50 = false;
+      if(pct < 100){ hit100 = false; }
+      if(pct === 0){ milestone.classList.remove('show'); }
+    }
+  }
+
+  function setFormMsg(text, type){
+    formMsg.textContent = text;
+    formMsg.className = 'msg' + (type ? ' ' + type : '');
+  }
+
+  document.getElementById('logBtn').addEventListener('click', () => {
+    const w = parseInt(document.getElementById('weekInput').value, 10);
+    const c = parseInt(document.getElementById('classInput').value, 10);
+
+    if(!w || !c || w < 1 || w > WEEKS || c < 1 || c > CLASSES_PER_WEEK){
+      setFormMsg('Enter a week between 1 and 8, and a class between 1 and 5.', 'error');
+      return;
+    }
+    const already = !!state[key(w,c)];
+    markDone(w,c);
+    setFormMsg(already
+      ? `Week ${w}, Class ${c} was already logged.`
+      : `Logged Week ${w}, Class ${c}. Nice.`, 'ok');
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    for(const k in state){ delete state[k]; }
+    hit50 = false; hit100 = false;
+    milestone.classList.remove('show');
+    setFormMsg('Progress reset.', '');
+    render();
+  });
+
+  buildGrid();
+  render();
+</script>
+</body>
+</html>
