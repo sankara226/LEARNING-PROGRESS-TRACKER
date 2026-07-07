@@ -40,11 +40,11 @@ python data-cleaner.py my_data.csv --drop-missing
 ## Example output
 
 ```
-Loaded 1,500 rows × 6 columns from 'sales_export.csv'
+Loaded 1,500 rows x 6 columns from 'sales_export.csv'
 
-──────────────────────────────────────────────────
+--------------------------------------------------
   DATA CLEANING SUMMARY
-──────────────────────────────────────────────────
+--------------------------------------------------
 
   Rows
     Before : 1,500
@@ -66,5 +66,5 @@ Loaded 1,500 rows × 6 columns from 'sales_export.csv'
     region: 22 cell(s)
 
   Output saved to: sales_export_cleaned.csv
-──────────────────────────────────────────────────
+--------------------------------------------------
 ```

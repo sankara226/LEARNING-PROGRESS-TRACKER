@@ -79,7 +79,7 @@ def print_summary(
     output_path: str,
 ) -> None:
     """Print a human-readable cleaning summary."""
-    sep = "─" * 50
+    sep = "-" * 50
 
     print(f"\n{sep}")
     print("  DATA CLEANING SUMMARY")
@@ -95,7 +95,7 @@ def print_summary(
     print(f"\n  Columns ({len(df.columns)} total)")
     for col in df.columns:
         dtype = str(df[col].dtype)
-        missing_note = f"  ← had {missing_report[col]} missing" if col in missing_report else ""
+        missing_note = f"  <- had {missing_report[col]} missing" if col in missing_report else ""
         print(f"    {col:<30} {dtype}{missing_note}")
 
     if missing_report:
@@ -145,7 +145,7 @@ def main():
         sys.exit(1)
 
     original_rows = len(df)
-    print(f"Loaded {original_rows:,} rows × {len(df.columns)} columns from '{input_path.name}'")
+    print(f"Loaded {original_rows:,} rows x {len(df.columns)} columns from '{input_path.name}'")
 
     # Clean
     df = standardize_columns(df)
